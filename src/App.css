@@ -389,8 +389,20 @@ body {
   border-radius: 50%;
   font-size: 15px;
   font-weight: 800;
-  background: currentColor;
-  color: var(--bg);
+  color: #ffffff;
+  background: var(--muted);
+}
+
+.verdict--fail .verdict__icon {
+  background: var(--fail);
+}
+
+.verdict--review .verdict__icon {
+  background: var(--warn);
+}
+
+.verdict--pass .verdict__icon {
+  background: var(--pass);
 }
 
 .verdict__sub {
