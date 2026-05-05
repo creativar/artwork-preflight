@@ -253,9 +253,13 @@ function readIccDescription(icc: Uint8Array): string | undefined {
   return undefined;
 }
 
+export type StageCallback = (stage: string) => void;
+
 export async function analyseImage(
   file: File,
+  onStage: StageCallback = () => {},
 ): Promise<{ report: PreflightReport; url: string }> {
+  onStage('Reading file');
   const arrayBuffer = await file.arrayBuffer();
   const sourceUrl = URL.createObjectURL(file);
 
@@ -271,6 +275,7 @@ export async function analyseImage(
     ],
   });
 
+  onStage('Loading raster engine (first run pulls ~6 MB)');
   // Run all three sources in parallel
   const [vipsResult, exifMeta, jpegInfo] = await Promise.all([
     analyseWithVips(arrayBuffer),

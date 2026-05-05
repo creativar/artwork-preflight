@@ -10,6 +10,7 @@ import './App.css';
 
 export default function App() {
   const [busy, setBusy] = useState(false);
+  const [stage, setStage] = useState<string>('');
   const [report, setReport] = useState<PreflightReport | null>(null);
   const [preview, setPreview] = useState<PreviewSource | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -18,6 +19,7 @@ export default function App() {
     setBusy(true);
     setError(null);
     setReport(null);
+    setStage('Starting');
     setPreview((prev) => {
       if (prev?.url) URL.revokeObjectURL(prev.url);
       return null;
@@ -25,11 +27,11 @@ export default function App() {
     try {
       const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
       if (isPdf) {
-        const { report, url, pageCount } = await analysePdf(file);
+        const { report, url, pageCount } = await analysePdf(file, setStage);
         setReport(report);
         setPreview({ kind: 'pdf', url, pageCount });
       } else if (/^image\//.test(file.type) || /\.(jpe?g|png|tiff?|webp)$/i.test(file.name)) {
-        const { report, url } = await analyseImage(file);
+        const { report, url } = await analyseImage(file, setStage);
         setReport(report);
         setPreview({ kind: 'image', url });
       } else {
@@ -39,7 +41,15 @@ export default function App() {
       setError((e as Error).message);
     } finally {
       setBusy(false);
+      setStage('');
     }
+  }, []);
+
+  // Pre-warm mupdf when the user starts dragging — the wasm download begins
+  // before they drop, so most of the load latency is hidden.
+  const prewarm = useCallback(() => {
+    void import('mupdf').catch(() => {});
+    void import('wasm-vips').catch(() => {});
   }, []);
 
   return (
@@ -68,7 +78,7 @@ export default function App() {
       <main className="app__main">
         <section className="app__left">
           {!preview ? (
-            <DropZone onFile={handleFile} busy={busy} />
+            <DropZone onFile={handleFile} busy={busy} stage={stage} onPrewarm={prewarm} />
           ) : (
             <>
               {preview.kind === 'pdf' ? (

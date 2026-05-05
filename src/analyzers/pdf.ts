@@ -27,14 +27,21 @@ function boxToSize(box?: number[]): string {
   return `${fmtMm(w)} × ${fmtMm(h)}`;
 }
 
-export async function analysePdf(file: File): Promise<{
+export type StageCallback = (stage: string) => void;
+
+export async function analysePdf(
+  file: File,
+  onStage: StageCallback = () => {},
+): Promise<{
   report: PreflightReport;
   url: string;
   pageCount: number;
 }> {
+  onStage('Reading file');
   const arrayBuffer = await file.arrayBuffer();
   const url = URL.createObjectURL(new Blob([arrayBuffer], { type: 'application/pdf' }));
 
+  onStage('Parsing PDF structure');
   const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer.slice(0) });
   const pdf = await loadingTask.promise;
 
@@ -65,6 +72,7 @@ export async function analysePdf(file: File): Promise<{
   // --- Page boxes (first page) and authoritative colour-space audit
   // via MuPDF. pdf.js's private-API resource walk is unreliable on
   // real-world PDFs (silent fail on /TrimBox, image XObjects, etc.).
+  onStage('Loading press-grade engine (first run pulls ~10 MB)');
   let mupdfResult: MupdfAnalysis | null = null;
   try {
     mupdfResult = await analysePdfWithMupdf(arrayBuffer, { maxPages: 20 });
@@ -146,6 +154,7 @@ export async function analysePdf(file: File): Promise<{
 
   // --- Fonts ---
   // pdf.js loads fonts as we render or via getOperatorList. Walk pages.
+  onStage('Scanning fonts and content');
   const fontMap = new Map<string, { name: string; type: string; embedded: boolean; subset: boolean }>();
   const maxScan = Math.min(pdf.numPages, 20);
   for (let i = 1; i <= maxScan; i++) {
@@ -390,6 +399,7 @@ export async function analysePdf(file: File): Promise<{
   // Primary path: MuPDF renders directly to a CMYK pixmap, giving real
   // per-pixel C/M/Y/K values (press-grade).
   // Fallback: pdf.js render + naive sRGB → CMYK reverse (under-reports).
+  onStage('Computing ink coverage (CMYK render)');
   let inkMethod: 'mupdf' | 'pdfjs' | null = null;
   let ink: Awaited<ReturnType<typeof analyseInkCoverage>> | null = null;
   try {
