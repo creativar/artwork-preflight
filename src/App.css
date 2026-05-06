@@ -219,6 +219,98 @@ body {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
+.seps__bar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  background: rgba(15, 17, 21, 0.85);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+
+.seps__plates {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.plate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  transition: opacity 120ms, border-color 120ms;
+}
+
+.plate--off {
+  opacity: 0.45;
+  border-color: var(--border);
+}
+
+.plate--on {
+  border-color: var(--accent);
+}
+
+.plate__swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid;
+}
+
+.seps__reset {
+  margin-left: 4px;
+  padding: 5px 10px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.seps__reset:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.seps__pager {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.seps__pager button {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.seps__pager button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .pdf-preview__controls {
   position: absolute;
   top: 8px;

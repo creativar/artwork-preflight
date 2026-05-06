@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { DropZone } from './components/DropZone';
-import { PdfPreview } from './components/PdfPreview';
+import { PdfSeparationsPreview } from './components/PdfSeparationsPreview';
 import { ImagePreview } from './components/ImagePreview';
 import { ReportTable } from './components/ReportTable';
 import { analysePdf } from './analyzers/pdf';
@@ -27,9 +27,10 @@ export default function App() {
     try {
       const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
       if (isPdf) {
+        const buffer = await file.arrayBuffer();
         const { report, url, pageCount } = await analysePdf(file, setStage);
         setReport(report);
-        setPreview({ kind: 'pdf', url, pageCount });
+        setPreview({ kind: 'pdf', url, pageCount, buffer });
       } else if (/^image\//.test(file.type) || /\.(jpe?g|png|tiff?|webp)$/i.test(file.name)) {
         const { report, url } = await analyseImage(file, setStage);
         setReport(report);
@@ -69,9 +70,17 @@ export default function App() {
         </a>
         ), <a href="https://mozilla.github.io/pdf.js/" target="_blank" rel="noreferrer">pdf.js</a>{' '}
         and <a href="https://github.com/kleisauke/wasm-vips" target="_blank" rel="noreferrer">wasm-vips</a>.
-        This project is open source under{' '}
+        Open source under{' '}
         <a href="https://www.gnu.org/licenses/agpl-3.0.en.html" target="_blank" rel="noreferrer">
           AGPL-3.0
+        </a>
+        —{' '}
+        <a
+          href="https://github.com/creativar/artwork-preflight"
+          target="_blank"
+          rel="noreferrer"
+        >
+          source on GitHub
         </a>
         .
       </div>
@@ -81,8 +90,8 @@ export default function App() {
             <DropZone onFile={handleFile} busy={busy} stage={stage} onPrewarm={prewarm} />
           ) : (
             <>
-              {preview.kind === 'pdf' ? (
-                <PdfPreview url={preview.url} pageCount={preview.pageCount ?? 1} />
+              {preview.kind === 'pdf' && preview.buffer ? (
+                <PdfSeparationsPreview buffer={preview.buffer} pageCount={preview.pageCount ?? 1} />
               ) : (
                 <ImagePreview url={preview.url} alt={report?.fileName ?? 'preview'} />
               )}

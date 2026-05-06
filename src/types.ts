@@ -26,4 +26,5 @@ export interface PreviewSource {
   kind: 'pdf' | 'image';
   url: string;
   pageCount?: number;
+  buffer?: ArrayBuffer;
 }

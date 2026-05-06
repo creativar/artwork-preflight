@@ -23,8 +23,10 @@ This project is licensed under the **GNU Affero General Public License v3.0
 or later** (AGPL-3.0-or-later). See [`LICENSE`](./LICENSE) for the full text.
 
 The AGPL applies because MuPDF is AGPL. If you host this tool on a public
-network, AGPL §13 requires you to offer source to your users — point them at
-this repository.
+network, AGPL §13 requires you to offer source to your users. The hosted UI
+links to this repository in its footer:
+
+<https://github.com/creativar/artwork-preflight>
 
 ## Develop
 
