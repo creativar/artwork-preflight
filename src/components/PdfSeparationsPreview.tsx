@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 interface Props {
   buffer: ArrayBuffer;
   pageCount: number;
+  onClear?: () => void;
 }
 
 interface Channels {
@@ -29,7 +30,7 @@ function getMupdf(): Promise<any> {
   return mupdfPromise;
 }
 
-export function PdfSeparationsPreview({ buffer, pageCount }: Props) {
+export function PdfSeparationsPreview({ buffer, pageCount, onClear }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const cacheRef = useRef<Map<number, CachedPage>>(new Map());
@@ -107,6 +108,16 @@ export function PdfSeparationsPreview({ buffer, pageCount }: Props) {
           >
             All
           </button>
+          {onClear && (
+            <button
+              type="button"
+              className="seps__clear"
+              onClick={onClear}
+              title="Clear and analyse a different file"
+            >
+              Clear
+            </button>
+          )}
         </div>
         {pageCount > 1 && (
           <div className="seps__pager">
@@ -180,10 +191,14 @@ async function ensurePage(
   }
   const matrix = mupdf.Matrix.scale(scale, scale);
   const pixmap = probePage.toPixmap(matrix, mupdf.ColorSpace.DeviceCMYK, false);
+  // CRITICAL: copy the pixel samples BEFORE destroying the pixmap.
+  // pixmap.getPixels() returns a view into wasm heap memory; once the pixmap
+  // is destroyed (or the next page's pixmap is allocated), that heap region
+  // may be reused and the cached view shows the wrong data.
   const cached: CachedPage = {
     width: pixmap.getWidth(),
     height: pixmap.getHeight(),
-    samples: pixmap.getPixels(),
+    samples: new Uint8ClampedArray(pixmap.getPixels()),
     components: pixmap.getNumberOfComponents(),
   };
   pixmap.destroy?.();

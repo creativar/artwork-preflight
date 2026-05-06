@@ -416,54 +416,10 @@ export async function analysePdf(
       console.warn('pdf.js ink coverage failed too', e);
     }
   }
-  if (ink && ink.worst) {
-    const w = ink.worst;
-    const isPressGrade = inkMethod === 'mupdf';
-    const inkRows: CheckRow[] = [];
-    inkRows.push({ label: 'Worst page', value: `Page ${w.page}`, status: 'info' });
-    inkRows.push({
-      label: 'Max TAC',
-      value: `${w.maxTac.toFixed(0)} %`,
-      status: w.maxTac <= 300 ? 'pass' : w.maxTac <= 320 ? 'warn' : 'fail',
-      detail:
-        w.maxTac > 320
-          ? 'Ink coverage exceeds typical press limits — risk of drying issues, smearing, paper curl.'
-          : w.maxTac > 300
-            ? 'Above the conservative 300 % limit — confirm with the press.'
-            : undefined,
-    });
-    inkRows.push({
-      label: 'Average TAC',
-      value: `${w.avgTac.toFixed(0)} %`,
-      status: 'info',
-    });
-    inkRows.push({
-      label: 'Area over 280 %',
-      value: `${w.pctOver280.toFixed(2)} % of page`,
-      status: w.pctOver280 < 0.1 ? 'pass' : w.pctOver280 < 1 ? 'warn' : 'fail',
-    });
-    inkRows.push({
-      label: 'Area over 320 %',
-      value: `${w.pctOver320.toFixed(2)} % of page`,
-      status: w.pctOver320 < 0.05 ? 'pass' : w.pctOver320 < 0.5 ? 'warn' : 'fail',
-    });
-    inkRows.push({
-      label: 'Method',
-      value: isPressGrade ? 'MuPDF → CMYK pixmap (press-grade)' : 'pdf.js render → reverse CMYK (approx.)',
-      status: isPressGrade ? 'pass' : 'warn',
-      detail: isPressGrade
-        ? 'Page rendered directly to a CMYK pixmap by MuPDF — values are true per-pixel C+M+Y+K from the same colour engine used by Ghostscript.'
-        : 'pdf.js renders to sRGB only, so source CMYK values can\'t be recovered. Reported TAC is a LOWER BOUND — real ink coverage will be higher. (MuPDF engine failed to load.)',
-    });
-    sections.push({
-      title: `Ink coverage (scanned ${ink.scanned} of ${ink.total} pages)`,
-      rows: inkRows,
-      imageUrl: w.heatmapUrl,
-      imageCaption: isPressGrade
-        ? `Page ${w.page} — true CMYK coverage heatmap (blue = light, yellow = mid, red = dense). Press-grade values via MuPDF.`
-        : `Page ${w.page} — approximate coverage heatmap. Real CMYK source coverage will be higher.`,
-    });
-  }
+  // The interactive InkCoverageSection component renders this — see
+  // ReportTable.tsx. We populate the data on the report and skip pushing a
+  // static section here so the user gets a per-page picker instead of a
+  // worst-page-only view.
 
   return {
     url,
@@ -474,6 +430,24 @@ export async function analysePdf(
       fileType: 'pdf',
       mimeType: file.type || 'application/pdf',
       sections,
+      inkCoverage: ink
+        ? {
+            pages: ink.pages.map((p) => ({
+              page: p.page,
+              width: p.width,
+              height: p.height,
+              maxTac: p.maxTac,
+              avgTac: p.avgTac,
+              pctOver280: p.pctOver280,
+              pctOver320: p.pctOver320,
+              heatmapUrl: p.heatmapUrl,
+            })),
+            scanned: ink.scanned,
+            total: ink.total,
+            tacLimit: ink.tacLimit,
+            method: inkMethod ?? 'mupdf',
+          }
+        : undefined,
     },
   };
 }

@@ -91,21 +91,32 @@ export default function App() {
           ) : (
             <>
               {preview.kind === 'pdf' && preview.buffer ? (
-                <PdfSeparationsPreview buffer={preview.buffer} pageCount={preview.pageCount ?? 1} />
+                <PdfSeparationsPreview
+                  buffer={preview.buffer}
+                  pageCount={preview.pageCount ?? 1}
+                  onClear={() => {
+                    if (preview.url) URL.revokeObjectURL(preview.url);
+                    setPreview(null);
+                    setReport(null);
+                    setError(null);
+                  }}
+                />
               ) : (
-                <ImagePreview url={preview.url} alt={report?.fileName ?? 'preview'} />
+                <>
+                  <ImagePreview url={preview.url} alt={report?.fileName ?? 'preview'} />
+                  <button
+                    className="reset"
+                    onClick={() => {
+                      if (preview.url) URL.revokeObjectURL(preview.url);
+                      setPreview(null);
+                      setReport(null);
+                      setError(null);
+                    }}
+                  >
+                    Clear
+                  </button>
+                </>
               )}
-              <button
-                className="reset"
-                onClick={() => {
-                  if (preview.url) URL.revokeObjectURL(preview.url);
-                  setPreview(null);
-                  setReport(null);
-                  setError(null);
-                }}
-              >
-                Drop another file
-              </button>
             </>
           )}
           {error && <div className="error">{error}</div>}

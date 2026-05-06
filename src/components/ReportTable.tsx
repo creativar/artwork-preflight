@@ -1,6 +1,7 @@
 import type { PreflightReport } from '../types';
 import { computeVerdict } from '../lib/verdict';
 import { VerdictBanner } from './VerdictBanner';
+import { InkCoverageSection } from './InkCoverageSection';
 
 interface Props {
   report: PreflightReport;
@@ -44,6 +45,7 @@ export function ReportTable({ report }: Props) {
           )}
         </section>
       ))}
+      {report.inkCoverage && <InkCoverageSection data={report.inkCoverage} />}
     </div>
   );
 }
